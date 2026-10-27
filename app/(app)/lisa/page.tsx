@@ -1,0 +1,3 @@
+export default function AddPage() {
+  return <h1 className="text-2xl font-semibold">Lisa tšekk</h1>;
+}

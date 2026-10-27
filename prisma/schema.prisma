@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Household {
+  id         String    @id @default(cuid())
+  name       String
+  inviteCode String    @unique
+  createdAt  DateTime  @default(now())
+  users      User[]
+  receipts   Receipt[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  // lower-cased name, makes names unique case-insensitively
+  nameKey      String    @unique
+  email        String?   @unique
+  passwordHash String
+  householdId  String?
+  // optional in-app notice about receipts deleted within 30 days (off by default)
+  expiryNotice Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  household    Household? @relation(fields: [householdId], references: [id], onDelete: SetNull)
+  receipts     Receipt[]
+  sessions     Session[]
+
+  @@index([householdId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Receipt {
+  id           String    @id @default(cuid())
+  householdId  String
+  addedById    String
+  seller       String
+  purchaseDate DateTime  @db.Date
+  content      String
+  total        Decimal?  @db.Decimal(10, 2)
+  category     String
+  imageData    Bytes
+  // small preview shown in lists, so list responses never carry full images
+  thumbData    Bytes?
+  imageMime    String
+  retainUntil  DateTime  @db.Date
+  createdAt    DateTime  @default(now())
+  household    Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  addedBy      User      @relation(fields: [addedById], references: [id], onDelete: Cascade)
+
+  @@index([householdId, purchaseDate])
+  @@index([retainUntil])
+}
