@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/nav";
+import { Helper } from "@/components/helper";
 import { ErrorState } from "@/components/states";
 import { getCurrentUser, type CurrentUser } from "@/lib/auth";
 
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="mx-auto max-w-4xl px-4 pb-28 pt-6 md:pb-10">
         {failed ? <ErrorState /> : children}
       </main>
+      {!failed && <Helper />}
     </>
   );
 }

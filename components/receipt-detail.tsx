@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { ReceiptActions } from "@/components/receipt-actions";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { ErrorState } from "@/components/states";
 import { CATEGORIES } from "@/lib/categories";
@@ -23,6 +24,7 @@ export function ReceiptDetail({ id }: { id: string }) {
   const [failed, setFailed] = useState("");
   const [zoom, setZoom] = useState(1);
   const [confirming, setConfirming] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const [seller, setSeller] = useState("");
   const [date, setDate] = useState("");
@@ -92,16 +94,19 @@ export function ReceiptDetail({ id }: { id: string }) {
   if (!receipt) return <p className="text-sm text-muted">Laen...</p>;
 
   return (
-    <div className="space-y-4 pb-16">
+    <div className="space-y-4 pb-36 md:pb-0">
       <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Tagasi
       </Link>
       <h1 className="text-2xl font-semibold">{receipt.seller}</h1>
 
       <Card className="overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-3 py-2">
-          <span className="text-sm text-muted">Suurendus {Math.round(zoom * 100)}%</span>
-          <div className="flex gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
+          <div className="flex flex-wrap gap-2">
+            <ReceiptActions receipt={receipt} compact onError={setActionError} />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="mr-1 text-sm text-muted">{Math.round(zoom * 100)}%</span>
             <Button
               variant="outline"
               size="icon"
@@ -175,10 +180,18 @@ export function ReceiptDetail({ id }: { id: string }) {
       </Card>
 
       <div className="fixed inset-x-0 bottom-14 z-20 border-t border-border bg-card/95 backdrop-blur md:static md:border-0 md:bg-transparent">
-        <div className="mx-auto flex max-w-4xl gap-2 px-4 py-2 md:px-0">
-          <Button variant="danger" className="flex-1" onClick={() => setConfirming(true)}>
-            <Trash2 className="h-4 w-4" /> Kustuta
-          </Button>
+        <div className="mx-auto max-w-4xl space-y-1 px-4 py-2 md:px-0">
+          {actionError && (
+            <p role="alert" className="text-sm text-red-700">
+              {actionError}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <ReceiptActions receipt={receipt} withShare onError={setActionError} />
+            <Button variant="danger" className="flex-1" onClick={() => setConfirming(true)}>
+              <Trash2 className="h-4 w-4" /> Kustuta
+            </Button>
+          </div>
         </div>
       </div>
 

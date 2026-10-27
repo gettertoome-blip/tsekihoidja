@@ -10,12 +10,13 @@ import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState } from "@/components/states";
 import { ReceiptCard } from "@/components/receipt-card";
 import { CATEGORIES } from "@/lib/categories";
+import { isoToDisplay, toIso, todayIso } from "@/lib/dates";
 import { normalize } from "@/lib/text";
 import type { ReceiptDto } from "@/lib/receipts";
 
 const ALL = "all";
 
-export function ReceiptList() {
+export function ReceiptList({ expiryNotice }: { expiryNotice: boolean }) {
   const router = useRouter();
   const [receipts, setReceipts] = useState<ReceiptDto[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -52,6 +53,16 @@ export function ReceiptList() {
     });
   }, [receipts, query, category, from, to]);
 
+  // Optional notice (off by default) for receipts that expire within 30 days.
+  const expiringSoon = useMemo(() => {
+    if (!expiryNotice || !receipts) return [];
+    const today = todayIso();
+    const limit = new Date();
+    limit.setDate(limit.getDate() + 30);
+    const limitIso = toIso(limit);
+    return receipts.filter((r) => r.retainUntil >= today && r.retainUntil <= limitIso);
+  }, [expiryNotice, receipts]);
+
   const filtering = query.trim() !== "" || category !== ALL || from !== "" || to !== "";
 
   if (failed) return <ErrorState />;
@@ -73,6 +84,23 @@ export function ReceiptList() {
 
   return (
     <div className="space-y-4">
+      {expiringSoon.length > 0 && (
+        <div role="status" className="space-y-2 rounded-lg border border-primary bg-primary-soft p-4 text-sm">
+          <p className="font-medium">Need tšekid kustutatakse 30 päeva jooksul:</p>
+          <ul className="space-y-1">
+            {expiringSoon.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {r.seller} – {r.content} ({isoToDisplay(r.retainUntil)})
+                </span>
+                <Link href={`/tsekk/${r.id}`} className="font-medium text-primary-dark underline">
+                  Pikenda säilitusaega
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="space-y-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />

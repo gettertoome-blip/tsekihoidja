@@ -10,7 +10,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Avaleht</h1>
-      <ReceiptList />
+      <ReceiptList expiryNotice={user.expiryNotice} />
     </div>
   );
 }

@@ -8,7 +8,8 @@ import { Field, Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/states";
 import { useLocalDemo } from "@/lib/demo-client";
 
-type Me = { name: string; householdId: string | null; demo: boolean };
+type Me = { name: string; householdId: string | null; demo: boolean; expiryNotice: boolean };
+type ExpiryResult = { deleted: number; items: { seller: string; content: string }[] };
 type Household = {
   name: string;
   inviteCode: string;
@@ -34,6 +35,8 @@ export function HouseholdView() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [expiry, setExpiry] = useState<ExpiryResult | null>(null);
+  const [expiryBusy, setExpiryBusy] = useState(false);
   const [localDemo, setLocalDemo] = useLocalDemo();
 
   const load = useCallback(async () => {
@@ -64,6 +67,31 @@ export function HouseholdView() {
     if (!ok) return setError(data.error ?? "Midagi läks valesti.");
     await load();
     router.refresh();
+  }
+
+  async function setNotice(value: boolean) {
+    setMe((m) => (m ? { ...m, expiryNotice: value } : m));
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expiryNotice: value }),
+    });
+    if (!res.ok) {
+      setError("Seadet ei õnnestunud salvestada.");
+      setMe((m) => (m ? { ...m, expiryNotice: !value } : m));
+    }
+  }
+
+  async function runExpiry() {
+    setExpiryBusy(true);
+    setError("");
+    try {
+      const { ok, data } = await post("/api/admin/expire");
+      if (!ok) return setError(data.error ?? "Aegumiskontroll ebaõnnestus.");
+      setExpiry(data);
+    } finally {
+      setExpiryBusy(false);
+    }
   }
 
   async function logout() {
@@ -167,6 +195,35 @@ export function HouseholdView() {
             />
             Demorežiim
           </label>
+        )}
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 accent-primary"
+            checked={me.expiryNotice}
+            onChange={(e) => setNotice(e.target.checked)}
+          />
+          <span>
+            Näita avalehel teadet tšekkidest, mis kustutatakse 30 päeva jooksul
+            <span className="block text-xs text-muted">Vaikimisi väljas.</span>
+          </span>
+        </label>
+        {me.demo && localDemo && household && (
+          <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+            <p className="text-sm text-muted">
+              Demorežiim: kustutab kohe sinu leibkonna aegunud tšekid.
+            </p>
+            <Button variant="outline" onClick={runExpiry} disabled={expiryBusy}>
+              Käivita aegumiskontroll kohe
+            </Button>
+            {expiry && (
+              <p role="status" className="text-sm">
+                {expiry.deleted === 0
+                  ? "Aegunud tšekke ei leitud."
+                  : `Kustutati ${expiry.deleted} tšekki: ${expiry.items.map((i) => i.seller + " (" + i.content + ")").join(", ")}.`}
+              </p>
+            )}
+          </div>
         )}
         <Button variant="outline" onClick={logout}>
           <LogOut className="h-4 w-4" /> Logi välja
