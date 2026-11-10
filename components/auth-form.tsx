@@ -131,7 +131,14 @@ export function AuthForm({
         <Card className="space-y-2 border-dashed p-4 text-sm">
           <p className="font-medium">Demorežiim</p>
           <p className="text-muted">
-            Proovi rakendust demokontoga: <b>{demoUsers.join("</b> või <b>")}</b>, parool{" "}
+            Proovi rakendust demokontoga:{" "}
+            {demoUsers.map((u, i) => (
+              <span key={u}>
+                {i > 0 && " või "}
+                <b>{u}</b>
+              </span>
+            ))}
+            , parool{" "}
             <code className="rounded bg-primary-soft px-1">{demoPassword}</code>
           </p>
           <div className="flex flex-wrap gap-2">

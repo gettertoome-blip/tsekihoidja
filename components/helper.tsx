@@ -34,7 +34,12 @@ export function Helper() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-36 right-3 z-20 flex max-w-[16rem] flex-col items-end gap-2 md:bottom-6">
+    // On receipt pages a bottom action bar sits above the mobile nav, so the helper rides higher there.
+    <div
+      className={`fixed right-3 z-20 flex max-w-[16rem] flex-col items-end gap-2 md:bottom-6 ${
+        pathname.startsWith("/tsekk") ? "bottom-40" : "bottom-20"
+      }`}
+    >
       {open && (
         <div
           role="status"

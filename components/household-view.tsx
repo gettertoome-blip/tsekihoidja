@@ -107,7 +107,7 @@ export function HouseholdView() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard unavailable: the code is visible anyway
+      setError("Kopeerimine ei õnnestunud. Märgi kood käsitsi ja kopeeri see.");
     }
   }
 

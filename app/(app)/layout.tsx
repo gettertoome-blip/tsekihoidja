@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <AppNav />
-      <main className="mx-auto max-w-4xl px-4 pb-28 pt-6 md:pb-10">
+      <main className="mx-auto max-w-4xl px-4 pb-40 pt-6 md:pb-10">
         {failed ? <ErrorState /> : children}
       </main>
       {!failed && <Helper />}
